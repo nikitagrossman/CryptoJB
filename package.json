@@ -1,0 +1,12 @@
+{
+  "dependencies": {
+    "@amcharts/amcharts5": "^5.8.4",
+    "bootstrap": "^5.3.3",
+    "chart.js": "^4.4.2",
+    "typescript": "^5.3.3"
+  },
+  "devDependencies": {
+    "@types/bootstrap": "^5.2.10",
+    "@types/jquery": "^3.5.29"
+  }
+}
