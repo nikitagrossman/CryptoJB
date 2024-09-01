@@ -43,23 +43,27 @@ document.addEventListener('DOMContentLoaded', async () => {
       $('#myChart').show();
       updateTimeLabels();
       Object.entries(dataObj).forEach(([symbol, value]) => {
-        addData(chart, symbol, value.USD);
+        addData(symbol, value.USD);
       });
     }
   };
 
   const updateTimeLabels = () => {
-    const now = new Date();
-    const timeString = `${String(now.getHours()).padStart(2, '0')}:${String(
-      now.getMinutes()
-    ).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+    const timeString = getCurrentTimeString();
     chart.data.labels.push(timeString);
     if (chart.data.labels.length > 20) {
       chart.data.labels.shift();
     }
   };
 
-  const addData = (chart, label, newData) => {
+  const getCurrentTimeString = () => {
+    const now = new Date();
+    return `${String(now.getHours()).padStart(2, '0')}:${String(
+      now.getMinutes()
+    ).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+  };
+
+  const addData = (label, newData) => {
     let dataset = chart.data.datasets.find(
       (dataset) => dataset.label === label
     );
@@ -81,16 +85,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     dataset.data.push(newData);
   };
 
-  createOrUpdateChart();
-
-  setInterval(async () => {
+  const handleChartUpdate = async () => {
     await updateChart();
     chart.update();
-  }, 2000);
+  };
 
-  let coinToSwitch = [];
-
-  $(document).on('change', '.track-switch', async function () {
+  const handleTrackSwitchChange = async () => {
     chart.data.labels = [];
     const coinSymbolWasChosen = $(this).closest('.card').find('.symbol').text();
     let trackedCoinsFromStorage = JSON.parse(
@@ -112,8 +112,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         $('.modal-body').empty();
         trackedCoinsFromStorage.forEach((coinId) => {
           $('.modal-body').append(`
-                        <p>${coinId}</p> <button class="btn btn-danger remove-coin" data-coin-id="${coinId}">Remove</button>
-                    `);
+            <p>${coinId}</p>
+            <button class="btn btn-danger remove-coin" data-coin-id="${coinId}">Remove</button>
+          `);
         });
         coinToSwitch = [coinSymbolWasChosen];
         $(this).trigger('click');
@@ -130,12 +131,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }
     coinsToShow = trackedCoinsFromStorage;
-    await updateChart();
-    chart.update();
+    await handleChartUpdate();
     console.log(coinToSwitch);
-  });
+  };
 
-  $(document).on('click', '.remove-coin', async function () {
+  const handleRemoveCoinClick = async () => {
     const coinIdToRemove = $(this).data('coin-id');
     let trackedCoinsFromStorage = JSON.parse(
       localStorage.getItem('trackedCoins') ?? '[]'
@@ -145,8 +145,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     $(`#toggleSwitch${coinToAdd}`).trigger('click');
     coinToSwitch = [];
     coinsToShow = trackedCoinsFromStorage;
-    await updateChart();
-    chart.update();
+    await handleChartUpdate();
     $('.modal').modal('hide');
-  });
+  };
+
+  await createOrUpdateChart();
+  setInterval(handleChartUpdate, 2000);
+
+  $(document).on('change', '.track-switch', handleTrackSwitchChange);
+  $(document).on('click', '.remove-coin', handleRemoveCoinClick);
 });
